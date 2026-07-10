@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATEEZ · Sendoff Event Tool</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-left">
+      <img src="logo.png" alt="ATEEZ" class="logo-img">
+      <a href="#" class="nav-link active" onclick="showHome(); return false;">Home</a>
+      <a href="#" class="nav-link" onclick="setPart(null); return false;">Golden Hour</a>
+      <div class="toggle-group" id="part-toggle">
+        <button class="toggle-btn" onclick="setPart(1)">Pt. 1</button>
+        <button class="toggle-btn" onclick="setPart(2)">Pt. 2</button>
+        <button class="toggle-btn" onclick="setPart(3)">Pt. 3</button>
+        <button class="toggle-btn" onclick="setPart(4)">Pt. 4</button>
+        <button class="toggle-btn" onclick="setPart(5)">Pt. 5</button>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btn-world-a" onclick="setWorld('A')">World A</button>
+        <button class="toggle-btn" id="btn-world-z" onclick="setWorld('Z')">World Z</button>
+      </div>
+    </div>
+  </nav>
+  <main class="home" id="home">
+    <div class="cards">
+      <div class="card" onclick="openTool('vjing')">
+        <div class="card-preview" id="preview-vjing">
+          <img src="assets/previews/vjing.png" alt="Audio Visual Engine">
+        </div>
+        <div class="card-body"><h3>Audio Visual Engine</h3><p>Transforms ATEEZ tracks into synchronized real-time visuals for projection mapping, stage backdrops and immersive event spaces. Audio frequencies drive particle systems, noise textures and patterns inspired by the ATEEZ lightstick's armillary sphere and visual lore.</p></div>
+      </div>
+      <div class="card" onclick="openTool('photobooth')">
+        <div class="card-preview" id="preview-photobooth">
+          <img src="assets/previews/eye-booth.png" alt="Eye-Booth">
+        </div>
+        <div class="card-body"><h3>Eye Booth</h3><p>An interactive photobooth experience inspired by the Eye Tower surveillance system featured on ATEEZ's concert stage. Using real-time face tracking, the booth follows each visitor before capturing a personalized event photo. Inspired by the Eye Tower's symbolic role of observation and control within the ATEEZ lore, it transforms every portrait into an immersive event keepsake.</p></div>
+      </div>
+      <div class="card" onclick="openTool('dance-wall')">
+        <div class="card-preview" id="preview-dancewall">
+          <img src="assets/previews/preview-dancewall.png" alt="Sopro Dance Wall">
+        </div>
+        <div class="card-body"><h3>SOPRO Dance Wall</h3><p>An interactive dance wall inspired by SOPRO's glowing silhouette from the latest storyline. Using real-time body tracking, visitors become luminous silhouettes that mirror every movement, encouraging them to dance with the music while bringing one of ATEEZ's newest visual motifs into the event space.</p></div>
+      </div>
+      <div class="card" onclick="openTool('id-cards')">
+        <div class="card-preview" id="preview-idcards">
+          <img src="assets/previews/Frame 4.png" alt="ANITEEZ ID Card">
+        </div>
+        <div class="card-body"><h3>Event ID Creator</h3><p>A personalized check-in experience that generates and prints a unique event ID card for every visitor. Guests select their favorite ANITEEZ character, creating a personalized pass that serves as both an official event credential and a collectible souvenir throughout the ATEEZ sendoff experience.</p></div>
+      </div>
+    </div>
+  </main>
+  <div class="tool-view" id="tool-view">
+    
+    <iframe id="tool-frame" src="" allow="camera;microphone;autoplay"></iframe>
+  </div>
+  <footer class="footer" id="footer"> <p><strong>ATEEZ Sendoff Event Tool</strong></p>
+
+<p> Concept developed for <strong>KQ Entertainment</strong><br> Generative Gestaltung und KI im Design |  Informatik & Design </p>
+
+<p> Created by <strong>Elif Öztemür</strong> & <strong>Franziska Seeholzer</strong> </p>
+
+<p class="copyright"> Inspired by the ATEEZ universe. © SoSe 2026 </p> </footer>
+  <script src="script.js"></script>
+</body>
+</html>

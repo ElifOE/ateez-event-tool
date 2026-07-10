@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Photobooth - Admin</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <!-- Login-Bereich: sichtbar bis ein gueltiges Secret in sessionStorage
+       liegt (siehe admin.js). Getrennte Seite von index.html, damit das
+       Besucher-Interface unveraendert simpel bleibt (siehe Plan Schritt 2). -->
+  <div id="login-section">
+    <h1>Admin-Login</h1>
+    <p class="hint">
+      Achtung: einfacher Passwortschutz, keine echte Security (siehe README).
+    </p>
+    <form id="login-form">
+      <input type="password" id="login-secret" placeholder="Passwort" required />
+      <button type="submit">Anmelden</button>
+    </form>
+    <p id="login-error" class="error hidden">Falsches Passwort.</p>
+  </div>
+
+  <div id="admin-section" class="hidden">
+    <a href="index.html" id="back-link">&larr; Zurück zur Photobooth</a>
+    <h1>Photobooth - Admin</h1>
+
+    <section>
+      <h2>Stile</h2>
+      <!-- Grid aus Vorschaubildern (ein Tile pro Stil + ein "+"-Tile zum
+           Anlegen) statt einer Liste - Klick auf ein Tile zeigt dessen
+           Einstellungen unten in #style-editor. -->
+      <div id="styles-grid"></div>
+      <div id="style-editor"></div>
+    </section>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

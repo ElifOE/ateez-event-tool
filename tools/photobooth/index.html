@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <title>ATEEZ Eye Tower Poster</title>
+
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="style.css"
+    />
+  </head>
+
+  <body>
+    <main class="photobooth-shell">
+      <section
+        class="camera-column"
+        aria-label="Eye Booth Kamera"
+      >
+        <div
+          id="canvas-container"
+          class="canvas-container"
+        ></div>
+
+        <button
+          id="capture-button"
+          class="capture-button"
+          type="button"
+        >
+          <span
+            class="capture-button-dot"
+            aria-hidden="true"
+          ></span>
+
+          <span>Take photo</span>
+        </button>
+      </section>
+
+      <aside
+        class="photo-sidebar"
+        aria-label="Letzte Fotos"
+      >
+        <div class="photo-sidebar-header">
+          RECENT PHOTOS
+        </div>
+
+        <div
+          id="photo-gallery"
+          class="photo-gallery"
+        >
+          <p
+            id="photo-empty-state"
+            class="photo-empty-state"
+          >
+            Captured photos will appear here.
+          </p>
+        </div>
+
+        <div
+          class="photo-actions"
+          aria-label="Aktionen für das ausgewählte Foto"
+        >
+          <button
+            id="download-button"
+            type="button"
+            disabled
+          >
+            Download
+          </button>
+
+          <button
+            id="print-button"
+            type="button"
+            disabled
+          >
+            Print
+          </button>
+
+          <button
+            id="share-button"
+            type="button"
+            disabled
+          >
+            Share
+          </button>
+        </div>
+      </aside>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.13/lib/p5.min.js"></script>
+    <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
+    <script src="sketch.js"></script>
+  </body>
+</html>

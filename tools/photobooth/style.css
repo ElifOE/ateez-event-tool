@@ -1,0 +1,377 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  
+  --booth-width: min(
+    500px,
+    calc((100vw - 72px) / 2)
+  );
+}
+
+body {
+  background: #000;
+  color: #111;
+
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+  overflow: auto;
+}
+
+button {
+  font: inherit;
+}
+
+
+.photobooth-shell {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 24px;
+  padding: 16px;
+}
+
+
+.camera-column {
+  width: var(--booth-width);
+  flex: 0 0 var(--booth-width);
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  gap: 12px;
+  min-width: 0;
+}
+
+
+.canvas-container {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 5 / 7;
+
+  background: #fff;
+}
+
+
+.canvas-container canvas {
+  display: block;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  max-width: none;
+  max-height: none;
+
+  margin: 0;
+}
+
+
+.capture-button {
+  width: 100%;
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+  padding: 7px 14px;
+
+  border: 1px solid #ddd;
+  border-radius: 6px;
+
+  background: #fff;
+  color: #111;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.capture-button:hover:not(:disabled) {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.capture-button:disabled {
+  background: #f5f5f5;
+  color: #999;
+
+  opacity: 1;
+  cursor: default;
+}
+
+
+.capture-button-dot {
+  width: 10px;
+  height: 10px;
+
+  flex: 0 0 10px;
+
+  border: 1px solid #111;
+  border-radius: 50%;
+
+  background: #fff;
+  box-shadow: none;
+}
+
+
+.capture-button:hover:not(:disabled) .capture-button-dot {
+  border-color: #fff;
+  background: #fff;
+}
+
+
+.photo-sidebar {
+  width: var(--booth-width);
+  height: auto;
+  aspect-ratio: 5 / 7;
+
+  min-height: 0;
+  flex: 0 0 var(--booth-width);
+
+  padding: 16px;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid #ddd;
+  border-radius: 8px;
+
+  background: #fff;
+  color: #111;
+}
+
+
+.photo-sidebar-header {
+  padding-bottom: 12px;
+
+  border-bottom: 1px solid #e5e5e5;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+
+  color: #111;
+}
+
+
+.photo-gallery {
+  flex: 1;
+  min-height: 0;
+
+  padding: 16px 0;
+
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  align-content: start;
+  gap: 12px;
+
+  overflow-y: auto;
+}
+
+
+.photo-empty-state {
+  grid-column: 1 / -1;
+
+  margin: auto 0;
+  padding: 20px;
+
+  color: #777;
+
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+
+.photo-thumb {
+  appearance: none;
+
+  position: relative;
+
+  width: 100%;
+  padding: 0;
+
+  border: 1px solid #ddd;
+  border-radius: 6px;
+
+  background: #fff;
+
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.photo-thumb:hover {
+  border-color: #777;
+}
+
+.photo-thumb.is-selected {
+  border-color: #111;
+
+  outline: 2px solid #111;
+  outline-offset: -2px;
+}
+
+.photo-thumb img {
+  display: block;
+
+  width: 100%;
+  aspect-ratio: 5 / 7;
+
+  object-fit: cover;
+}
+
+
+.photo-actions {
+  display: flex;
+  gap: 0;
+
+  margin-top: 12px;
+
+  border: 1px solid #ddd;
+  border-radius: 6px;
+
+  overflow: hidden;
+}
+
+
+.photo-actions button {
+  flex: 1;
+
+  padding: 7px 8px;
+
+  border: none;
+  border-right: 1px solid #ddd;
+  border-radius: 0;
+
+  background: #fff;
+  color: #111;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.photo-actions button:last-child {
+  border-right: none;
+}
+
+.photo-actions button:hover:not(:disabled) {
+  background: #111;
+  color: #fff;
+}
+
+.photo-actions button:disabled {
+  background: #f5f5f5;
+  color: #aaa;
+
+  opacity: 1;
+  cursor: default;
+}
+
+
+.canvas-container::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background: #fff;
+  opacity: 0;
+}
+
+.canvas-container.is-flashing::after {
+  animation: camera-flash 220ms ease-out;
+}
+
+@keyframes camera-flash {
+  0% {
+    opacity: 0.92;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+
+@media (max-width: 1100px) {
+  :root {
+    --booth-width: min(
+      500px,
+      calc(100vw - 32px)
+    );
+  }
+
+  .photobooth-shell {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .camera-column,
+  .photo-sidebar {
+    flex-basis: auto;
+  }
+
+  .photo-sidebar {
+    width: var(--booth-width);
+  }
+
+  .photo-gallery {
+    grid-template-columns:
+      repeat(4, minmax(80px, 1fr));
+  }
+}
+
+
+@media (max-width: 600px) {
+  .photo-gallery {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .photo-actions button {
+    padding: 7px 4px;
+    font-size: 10px;
+  }
+}
