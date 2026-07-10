@@ -1,80 +1,96 @@
-// Admin-Panel: Stile verwalten (Anyteez-Referenzbild + Prompt-Text pro Stil).
-// Eigene Seite/Skript (siehe Plan Schritt 2), damit index.html/app.js fuer
-// Event-Besucher unveraendert simpel bleiben.
+// Settings-Panel: Stile verwalten (Anyteez-Referenzbild + Prompt-Text pro
+// Stil) plus Umschalten in/aus dem Settings-Modus. Ehemals admin.html/
+// admin.js/admin.css als eigene Seite - jetzt Teil von index.html, damit
+// man Einstellungen direkt an Kamera/Stilauswahl auf derselben Seite testen
+// kann (siehe Plan). BACKEND_URL wird bereits von app.js deklariert (beide
+// Skripte teilen sich denselben globalen Scope) und hier weiterverwendet.
 
-// Konfigurierbar wie in app.js, fuer Integrationsfaehigkeit (siehe Schritt 3).
-const BACKEND_URL = window.PHOTOBOOTH_CONFIG?.backendUrl || "http://localhost:3000";
+const SETTINGS_MODE_STORAGE_KEY = "photoboothSettingsMode";
 
-const SECRET_STORAGE_KEY = "photoboothAdminSecret";
-
-const loginSection = document.getElementById("login-section");
-const loginForm = document.getElementById("login-form");
-const loginSecretInput = document.getElementById("login-secret");
-const loginError = document.getElementById("login-error");
-const adminSection = document.getElementById("admin-section");
-const stylesGrid = document.getElementById("styles-grid");
 const styleEditor = document.getElementById("style-editor");
 
-// Zentrale fetch-Hilfsfunktion: haengt das Secret als Header an, und wirft
-// bei 401 das gespeicherte Secret weg, damit erneut eingeloggt werden muss.
-async function adminFetch(path, options = {}) {
-  const response = await fetch(`${BACKEND_URL}/admin${path}`, {
-    ...options,
-    headers: {
-      ...options.headers,
-      "X-Admin-Secret": sessionStorage.getItem(SECRET_STORAGE_KEY) || "",
-    },
-  });
+const appRoot = document.getElementById("app");
+const settingsToggleInput = document.getElementById("settings-toggle");
 
-  if (response.status === 401) {
-    sessionStorage.removeItem(SECRET_STORAGE_KEY);
-    showLogin();
-    throw new Error("Nicht autorisiert");
-  }
+// --- Settings-Modus ein-/ausschalten ----------------------------------------
+// Ein einziger Toggle-Schalter statt zweier getrennter Links schaltet den
+// Settings-Modus in beide Richtungen um.
 
-  return response;
-}
-
-function showLogin() {
-  loginSection.classList.remove("hidden");
-  adminSection.classList.add("hidden");
-}
-
-function showAdmin() {
-  loginSection.classList.add("hidden");
-  adminSection.classList.remove("hidden");
-  loadStyles();
-}
-
-loginForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  sessionStorage.setItem(SECRET_STORAGE_KEY, loginSecretInput.value);
-
-  try {
-    const response = await adminFetch("/styles");
-    if (!response.ok) throw new Error();
-    loginError.classList.add("hidden");
-    showAdmin();
-  } catch {
-    sessionStorage.removeItem(SECRET_STORAGE_KEY);
-    loginError.classList.remove("hidden");
+settingsToggleInput.addEventListener("change", () => {
+  if (settingsToggleInput.checked) {
+    enterSettingsMode();
+  } else {
+    exitSettingsMode();
   }
 });
 
-// --- Stile -----------------------------------------------------------------
-// Grid aus Vorschaubildern (ein Tile pro Stil + ein "+"-Tile) statt einer
-// Liste. Klick auf ein Tile zeigt dessen Einstellungen in #style-editor;
-// das "+"-Tile zeigt dort statt eines Stils das "Neuen Stil anlegen"-Formular.
+function enterSettingsMode() {
+  appRoot.classList.add("settings-mode");
+  sessionStorage.setItem(SETTINGS_MODE_STORAGE_KEY, "1");
+  window.photobooth.renderStylePanels();
+  triggerCanvasResize();
+  loadAdminStyles();
+}
 
-let currentStyles = [];
-let selectedStyleId = null;
+function exitSettingsMode() {
+  appRoot.classList.remove("settings-mode");
+  sessionStorage.removeItem(SETTINGS_MODE_STORAGE_KEY);
+  window.photobooth.renderStylePanels();
+  triggerCanvasResize();
+}
+
+// Falls die Seite waehrend des Settings-Modus neu geladen wird (z.B. durch
+// Live-Reload-Tools, die auf Backend-Dateien reagieren - siehe
+// .vscode/settings.json), bleibt der Modus sonst nur im Toggle-Schalter
+// "haengen" (Browser stellt Checkbox-Zustaende nach einem Reload oft wieder
+// her), waehrend die Seite selbst in den Normalmodus zurueckfaellt. Hier
+// wird der Settings-Modus daher beim Laden wiederhergestellt, falls er vor
+// dem Reload aktiv war.
+if (sessionStorage.getItem(SETTINGS_MODE_STORAGE_KEY)) {
+  settingsToggleInput.checked = true;
+  enterSettingsMode();
+}
+
+// Die Kamera-Spalte aendert beim Moduswechsel ihre Groesse, aber sketch.js
+// reagiert nur auf echte window-Resize-Events (kein ResizeObserver) - ein
+// synthetisches Resize-Event loest p5's windowResized() trotzdem aus, ohne
+// sketch.js selbst anfassen zu muessen.
+function triggerCanvasResize() {
+  window.dispatchEvent(new Event("resize"));
+}
+
+// Kein Login-Schritt mehr davor - einfache fetch-Hilfsfunktion, die nur
+// noch die BACKEND_URL/Pfad-Zusammensetzung fuer /admin/* uebernimmt.
+async function adminFetch(path, options = {}) {
+  return fetch(`${BACKEND_URL}/admin${path}`, options);
+}
+
+// --- Stile -----------------------------------------------------------------
+// Kein eigenes Stile-Grid mehr - welcher Stil bearbeitet wird, waehlt man
+// direkt ueber die Stil-Thumbnails links neben der Kamera (app.js), die im
+// Settings-Modus alle Stile + eine "+"-Kachel anzeigen. Die oeffentliche
+// GET /styles-Route (fuer diese Thumbnails) liefert bewusst nur id/name/
+// thumbnail (siehe server.js) - fuer das Editor-Formular (seed/promptText/
+// anyteezReferenceImage) wird hier weiterhin GET /admin/styles genutzt und
+// als Lookup-Cache gehalten statt in einem eigenen Grid gerendert.
+
+let adminStylesById = new Map();
+let selectedAdminStyle = null;
 let creatingNewStyle = false;
 
-async function loadStyles() {
+async function loadAdminStyles() {
   const response = await adminFetch("/styles");
-  currentStyles = await response.json();
-  renderStylesGrid();
+  const styles = await response.json();
+  adminStylesById = new Map(styles.map((style) => [style.id, style]));
+
+  if (!creatingNewStyle) {
+    selectedAdminStyle = adminStylesById.get(window.photobooth.selectedStyleId) || null;
+  }
   renderStyleEditor();
+
+  // Haelt die Stilauswahl-Spalte (Besucher-Seite) synchron, damit
+  // Aenderungen sofort testbar sind, ohne die Seite neu zu laden.
+  window.photobooth.loadStyles();
 }
 
 // Baut die URL zum Anzeigen eines in ComfyUI liegenden Bildes (Referenzbild
@@ -87,39 +103,19 @@ function referenceImageUrl(filename) {
   return `${BACKEND_URL}/image?${params.toString()}`;
 }
 
-function renderStylesGrid() {
-  stylesGrid.innerHTML = "";
+// Hooks, die app.js beim Klick auf ein Stil-Thumbnail bzw. die "+"-Kachel
+// aufruft (siehe createStyleThumb/createAddStyleTile in app.js).
+window.photobooth.onStyleSelected = (styleId) => {
+  creatingNewStyle = false;
+  selectedAdminStyle = adminStylesById.get(styleId) || null;
+  renderStyleEditor();
+};
 
-  currentStyles.forEach((style) => {
-    const tile = document.createElement("div");
-    tile.className = "style-tile" + (style.id === selectedStyleId ? " selected" : "");
-    tile.title = style.name;
-    tile.innerHTML = style.anyteezReferenceImage
-      ? `<img src="${referenceImageUrl(style.anyteezReferenceImage)}" alt="${style.name}" />`
-      : style.name;
-
-    tile.addEventListener("click", () => {
-      selectedStyleId = style.id;
-      creatingNewStyle = false;
-      renderStylesGrid();
-      renderStyleEditor();
-    });
-
-    stylesGrid.appendChild(tile);
-  });
-
-  const addTile = document.createElement("div");
-  addTile.className = "style-tile add-tile" + (creatingNewStyle ? " selected" : "");
-  addTile.title = "Neuen Stil anlegen";
-  addTile.textContent = "+";
-  addTile.addEventListener("click", () => {
-    creatingNewStyle = true;
-    selectedStyleId = null;
-    renderStylesGrid();
-    renderStyleEditor();
-  });
-  stylesGrid.appendChild(addTile);
-}
+window.photobooth.onAddStyleTileClicked = () => {
+  creatingNewStyle = true;
+  selectedAdminStyle = null;
+  renderStyleEditor();
+};
 
 function renderStyleEditor() {
   styleEditor.innerHTML = "";
@@ -129,13 +125,12 @@ function renderStyleEditor() {
     return;
   }
 
-  const style = currentStyles.find((s) => s.id === selectedStyleId);
-  if (!style) {
-    styleEditor.innerHTML = '<p class="hint">Stil oben auswählen oder mit "+" einen neuen anlegen.</p>';
+  if (!selectedAdminStyle) {
+    styleEditor.innerHTML = '<p class="hint">Stil links auswählen oder mit "+" einen neuen anlegen.</p>';
     return;
   }
 
-  styleEditor.appendChild(buildEditStyleForm(style));
+  styleEditor.appendChild(buildEditStyleForm(selectedAdminStyle));
 }
 
 function buildEditStyleForm(style) {
@@ -168,14 +163,15 @@ function buildEditStyleForm(style) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(Object.fromEntries(formData)),
     });
-    loadStyles();
+    loadAdminStyles();
   });
 
   wrapper.querySelector(".delete-style-button").addEventListener("click", async () => {
     if (!confirm(`Stil "${style.name}" wirklich löschen?`)) return;
     await adminFetch(`/styles/${style.id}`, { method: "DELETE" });
-    selectedStyleId = null;
-    loadStyles();
+    window.photobooth.selectedStyleId = null;
+    selectedAdminStyle = null;
+    loadAdminStyles();
   });
 
   wrapper.querySelector(".reference-image-input").addEventListener("change", async (event) => {
@@ -184,7 +180,7 @@ function buildEditStyleForm(style) {
     const formData = new FormData();
     formData.append("image", file);
     await adminFetch(`/styles/${style.id}/reference-image`, { method: "POST", body: formData });
-    loadStyles();
+    loadAdminStyles();
   });
 
   return wrapper;
@@ -231,20 +227,9 @@ function buildAddStyleForm() {
     }
 
     creatingNewStyle = false;
-    selectedStyleId = newStyle.id;
-    loadStyles();
+    window.photobooth.selectedStyleId = newStyle.id;
+    loadAdminStyles();
   });
 
   return wrapper;
-}
-
-// Beim Laden pruefen, ob noch ein gueltiges Secret aus einer frueheren
-// Sitzung gespeichert ist (sessionStorage - geht beim Schliessen des Tabs
-// verloren, bewusst kein dauerhaftes Login fuer den Kiosk-Einsatz).
-if (sessionStorage.getItem(SECRET_STORAGE_KEY)) {
-  adminFetch("/styles")
-    .then((response) => (response.ok ? showAdmin() : showLogin()))
-    .catch(() => showLogin());
-} else {
-  showLogin();
 }

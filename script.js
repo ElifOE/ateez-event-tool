@@ -45,9 +45,9 @@ function openTool(name) {
 
   const version = Date.now();
 
-  if (name === 'id-cards') {
+  if (name === 'id_photobooth') {
     frame.src =
-      'tools/id-cards/frontend/index.html?v=' + version;
+      'tools/id_photobooth/frontend/index.html?v=' + version;
   } else {
     frame.src =
       'tools/' + name + '/index.html?v=' + version;
@@ -58,7 +58,7 @@ function openTool(name) {
   toolView.classList.add('open');
 
   frame.onload = function () {
-    if (name === 'id-cards') {
+    if (name === 'id_photobooth') {
       return;
     }
 

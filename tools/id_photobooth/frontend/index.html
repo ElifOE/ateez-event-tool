@@ -6,12 +6,34 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Rein dekorative, rotierende Kompass-Deko im Hintergrund (angelehnt an
+       ateez-sendoff-tool/tools/vjing, aber ohne Musikreaktion, siehe Plan).
+       Steht bewusst VOR #app im Markup: #app setzt kein eigenes background/
+       position/z-index und bildet daher keinen eigenen Stacking-Context, die
+       Deko wird so automatisch zuerst gemalt und scheint nur durch die
+       transparenten Zwischenraeume von #app (Padding/Gaps) durch.
+       aria-hidden + pointer-events:none, da rein optisch, keine Interaktion. -->
+  <div class="compass-decor compass-decor--left" aria-hidden="true">
+    <span class="compass-ring"></span>
+    <span class="compass-ring"></span>
+    <span class="compass-ring"></span>
+  </div>
+  <div class="compass-decor compass-decor--right" aria-hidden="true">
+    <span class="compass-ring"></span>
+    <span class="compass-ring"></span>
+    <span class="compass-ring"></span>
+  </div>
+
   <div id="app">
 
-    <!-- Dezenter Link in den Admin-Bereich - bewusst klein/unauffaellig
-         gehalten, da der Bereich fuer Organisator:innen ist, nicht fuers
-         Event-Publikum (siehe README/Plan). -->
-    <a href="admin.html" id="admin-link">Einstellungen</a>
+    <!-- Ein einziger Toggle-Schalter statt zweier getrennter Links, um in
+         den Einstellungsmodus rein und wieder raus zu kommen (siehe
+         settings.js). Bleibt per position:fixed in beiden Modi sichtbar. -->
+    <label id="settings-toggle-label" for="settings-toggle">
+      <span class="settings-toggle-text">Einstellungen</span>
+      <input type="checkbox" id="settings-toggle" />
+      <span class="settings-toggle-switch" aria-hidden="true"></span>
+    </label>
 
     <!-- Stage: Style-Panels + Kamera als Flex-Gruppe statt fester Grid-
          Spalten, damit die Panels direkt am Kamerabild anliegen statt am
@@ -30,6 +52,18 @@
       </div>
 
       <div id="style-panel-right" class="style-panel"></div>
+
+      <!-- Einstellungs-Spalte: nur sichtbar, wenn #app die Klasse
+           "settings-mode" traegt (siehe settings.js/style.css). Kein
+           Login-Schritt mehr davor - direkt die Stile-Verwaltung. -->
+      <div id="settings-panel">
+        <h2>Stile</h2>
+        <!-- Kein eigenes Stile-Grid mehr - die Auswahl, welcher Stil
+             bearbeitet wird, laeuft direkt ueber die Stil-Thumbnails links
+             neben der Kamera (inkl. "+"-Kachel im Settings-Modus, siehe
+             app.js/settings.js). Hier nur noch das Formular. -->
+        <div id="style-editor"></div>
+      </div>
     </div>
 
     <!-- Aktionsleiste unten: Aufnahme- und Upload-Option nebeneinander,
@@ -96,5 +130,6 @@
   <script src="p5.min.js"></script>
   <script src="sketch.js"></script>
   <script src="app.js"></script>
+  <script src="settings.js"></script>
 </body>
 </html>

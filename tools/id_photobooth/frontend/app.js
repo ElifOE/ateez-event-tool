@@ -18,30 +18,64 @@ window.photobooth = window.photobooth || {};
 window.photobooth.selectedStyleId = null;
 window.photobooth.capturedPhotoBlob = null;
 
+// Einmalig geladene Stile werden hier gecacht, damit ein Wechsel in den
+// Settings-Modus (und zurueck) die Panels neu anordnen kann, ohne erneut
+// beim Backend nachzufragen (siehe renderStylePanels).
+window.photobooth.allStyles = [];
+
 async function loadStyles() {
   const leftPanel = document.getElementById("style-panel-left");
-  const rightPanel = document.getElementById("style-panel-right");
 
   try {
     const response = await fetch(`${BACKEND_URL}/styles`);
     if (!response.ok) {
       throw new Error(`Backend antwortete mit ${response.status}`);
     }
-    const styles = await response.json();
-
-    // Erste Haelfte links, zweite Haelfte rechts - funktioniert fuer
-    // beliebige Stilanzahl, nicht nur fest "4 und 4".
-    const splitIndex = Math.ceil(styles.length / 2);
-    const leftStyles = styles.slice(0, splitIndex);
-    const rightStyles = styles.slice(splitIndex);
-
-    leftStyles.forEach((style) => leftPanel.appendChild(createStyleThumb(style)));
-    rightStyles.forEach((style) => rightPanel.appendChild(createStyleThumb(style)));
+    window.photobooth.allStyles = await response.json();
+    renderStylePanels();
   } catch (err) {
     console.error("Stile konnten nicht geladen werden:", err);
     leftPanel.textContent = "Stile konnten nicht geladen werden";
   }
 }
+
+// Verteilt die gecachten Stile auf die Panels - im Settings-Modus alle
+// (2-spaltig wie gewohnt, siehe .style-panel in style.css) in die linke
+// Spalte plus eine "+"-Kachel zum Anlegen, sonst wie bisher haelftig auf
+// links/rechts gesplittet.
+function renderStylePanels() {
+  const leftPanel = document.getElementById("style-panel-left");
+  const rightPanel = document.getElementById("style-panel-right");
+  const previouslySelectedId = window.photobooth.selectedStyleId;
+
+  leftPanel.innerHTML = "";
+  rightPanel.innerHTML = "";
+
+  const styles = window.photobooth.allStyles;
+  const inSettingsMode = document.getElementById("app").classList.contains("settings-mode");
+
+  if (inSettingsMode) {
+    styles.forEach((style) => leftPanel.appendChild(createStyleThumb(style)));
+    leftPanel.appendChild(createAddStyleTile());
+  } else {
+    // Erste Haelfte links, zweite Haelfte rechts - funktioniert fuer
+    // beliebige Stilanzahl, nicht nur fest "4 und 4".
+    const splitIndex = Math.ceil(styles.length / 2);
+    styles.slice(0, splitIndex).forEach((style) => leftPanel.appendChild(createStyleThumb(style)));
+    styles.slice(splitIndex).forEach((style) => rightPanel.appendChild(createStyleThumb(style)));
+  }
+
+  // Auswahl-Highlight ueber den Re-Render hinweg erhalten, da
+  // createStyleThumb bei jedem Aufruf neue Elemente erzeugt.
+  if (previouslySelectedId != null) {
+    document
+      .querySelectorAll(`.style-thumb[data-style-id="${previouslySelectedId}"]`)
+      .forEach((el) => el.classList.add("selected"));
+  }
+}
+
+window.photobooth.loadStyles = loadStyles;
+window.photobooth.renderStylePanels = renderStylePanels;
 
 function createStyleThumb(style) {
   const thumb = document.createElement("div");
@@ -65,18 +99,49 @@ function createStyleThumb(style) {
     thumb.appendChild(label);
   }
 
-  thumb.addEventListener("click", () => selectStyle(thumb, style.id));
+  thumb.addEventListener("click", () => selectStyle(thumb, style));
 
   return thumb;
 }
 
-function selectStyle(thumbElement, styleId) {
+// "+"-Kachel zum Anlegen eines neuen Stils - nur im Settings-Modus sichtbar
+// (siehe renderStylePanels). Nutzt dieselbe .style-thumb-Optik wie die
+// normalen Thumbnails, damit sie sich ins 2-spaltige Panel einreiht.
+function createAddStyleTile() {
+  const tile = document.createElement("div");
+  tile.className = "style-thumb add-tile";
+  tile.title = "Neuen Stil anlegen";
+  tile.textContent = "+";
+
+  tile.addEventListener("click", () => {
+    document
+      .querySelectorAll(".style-thumb.selected")
+      .forEach((el) => el.classList.remove("selected"));
+    tile.classList.add("selected");
+    window.photobooth.selectedStyleId = null;
+
+    if (window.photobooth.onAddStyleTileClicked) {
+      window.photobooth.onAddStyleTileClicked();
+    }
+  });
+
+  return tile;
+}
+
+function selectStyle(thumbElement, style) {
   document
     .querySelectorAll(".style-thumb.selected")
     .forEach((el) => el.classList.remove("selected"));
 
   thumbElement.classList.add("selected");
-  window.photobooth.selectedStyleId = styleId;
+  window.photobooth.selectedStyleId = style.id;
+
+  // Hook fuer settings.js: zeigt im Settings-Modus den Bearbeiten-Editor
+  // fuer den angeklickten Stil. Im Normalmodus ist der Hook zwar
+  // registriert, aber wirkungslos, da #settings-panel dort unsichtbar ist.
+  if (window.photobooth.onStyleSelected) {
+    window.photobooth.onStyleSelected(style.id);
+  }
 }
 
 loadStyles();

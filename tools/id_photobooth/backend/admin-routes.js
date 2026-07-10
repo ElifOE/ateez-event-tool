@@ -1,11 +1,8 @@
 // Admin-Bereich: Styles verwalten (inkl. Anyteez-Referenzbild-Upload direkt
 // aus dem Browser + Prompt-Text pro Stil).
 //
-// WICHTIG (siehe README/Plan): der Passwortschutz hier ist bewusst simpel
-// und NICHT produktionsreif - ein einzelnes geteiltes Secret per Header,
-// kein Hashing, keine echte Session-Verwaltung. Das reicht als Bremse gegen
-// zufaelligen Zugriff bei diesem lokalen Uni-Projekt, ist aber keine
-// echte Absicherung (siehe PROJECT_CONTEXT.md: nicht produktionsreif).
+// Kein Passwortschutz mehr (bewusst entfernt - der Login-Schritt vor den
+// Einstellungen im Frontend entfaellt, siehe settings.js).
 
 import express from "express";
 import { readFile, writeFile } from "node:fs/promises";
@@ -22,20 +19,10 @@ async function writeJson(path, data) {
   await writeFile(path, JSON.stringify(data, null, 2) + "\n", "utf-8");
 }
 
-// Prueft den Header "X-Admin-Secret" gegen die ADMIN_SECRET-Umgebungsvariable.
-function adminAuthMiddleware(req, res, next) {
-  const provided = req.get("X-Admin-Secret");
-  if (!process.env.ADMIN_SECRET || provided !== process.env.ADMIN_SECRET) {
-    return res.status(401).json({ error: "Nicht autorisiert" });
-  }
-  next();
-}
-
 // multer-Instanz wird von server.js uebergeben (gleiche Memory-Storage-
 // Konfiguration wie bei /generate, keine zweite Instanz noetig).
 export function createAdminRouter(upload) {
   const router = express.Router();
-  router.use(adminAuthMiddleware);
 
   // GET /admin/styles - volle Style-Objekte (im Unterschied zu GET /styles,
   // das nur die oeffentlichen Felder zeigt).
